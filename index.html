@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrigoTools — Strumenti per tecnici del freddo</title>
+  <meta name="description" content="Calcolatori per frigoristi: curva climatica, surriscaldamento, COP/EER, conversioni." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">❄</div>
+        <div>
+          <div class="brand-name">FrigoTools</div>
+          <div class="brand-sub">strumenti tecnici</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-module="curva">Curva climatica</button>
+        <button class="nav-item" data-module="conversioni">Conversioni unità</button>
+        <button class="nav-item" data-module="cop">COP / EER</button>
+        <button class="nav-item" data-module="info">Info &amp; formule</button>
+      </nav>
+      <div class="sidebar-foot">v0.1 — uso interno corsi</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+        <h1 id="moduleTitle">Curva climatica</h1>
+      </header>
+
+      <!-- MODULO: CURVA CLIMATICA -->
+      <section class="module active" id="module-curva">
+        <p class="lead">
+          Calcola la temperatura di mandata dell'impianto in funzione della temperatura
+          esterna, interpolando linearmente tra due punti di taratura.
+        </p>
+        <div class="grid">
+          <div class="card">
+            <h2>Parametri</h2>
+            <div class="field">
+              <label>Temp. esterna di progetto (°C)</label>
+              <input type="number" id="text_min" value="-10" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Temp. mandata a temp. progetto (°C)</label>
+              <input type="number" id="tmand_max" value="50" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Temp. esterna di fine curva (°C)</label>
+              <input type="number" id="text_max" value="15" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Temp. mandata a fine curva (°C)</label>
+              <input type="number" id="tmand_min" value="25" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Temp. esterna da verificare (°C)</label>
+              <input type="number" id="text_check" value="0" step="0.5" />
+            </div>
+            <div class="result" id="curvaResult">—</div>
+          </div>
+          <div class="card chart-card">
+            <h2>Grafico</h2>
+            <canvas id="curvaChart"></canvas>
+            <div class="hint">La curva è una retta tra i due punti di taratura. Modifica i valori per aggiornare.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: CONVERSIONI -->
+      <section class="module" id="module-conversioni">
+        <p class="lead">Conversioni rapide tra le unità più usate sul campo.</p>
+        <div class="grid">
+          <div class="card">
+            <h2>Pressione</h2>
+            <div class="field"><label>bar</label><input type="number" id="conv_bar" value="1" /></div>
+            <div class="field"><label>psi</label><input type="number" id="conv_psi" /></div>
+            <div class="field"><label>kPa</label><input type="number" id="conv_kpa" /></div>
+          </div>
+          <div class="card">
+            <h2>Temperatura</h2>
+            <div class="field"><label>°C</label><input type="number" id="conv_c" value="0" /></div>
+            <div class="field"><label>°F</label><input type="number" id="conv_f" /></div>
+            <div class="field"><label>K</label><input type="number" id="conv_k" /></div>
+          </div>
+          <div class="card">
+            <h2>Potenza</h2>
+            <div class="field"><label>kW</label><input type="number" id="conv_kw" value="1" /></div>
+            <div class="field"><label>frig/h (kcal/h)</label><input type="number" id="conv_frig" /></div>
+            <div class="field"><label>BTU/h</label><input type="number" id="conv_btu" /></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: COP/EER -->
+      <section class="module" id="module-cop">
+        <p class="lead">Rapporto tra resa e potenza assorbita.</p>
+        <div class="grid">
+          <div class="card">
+            <h2>Calcolo</h2>
+            <div class="field"><label>Resa (kW) — termica o frigorifera</label><input type="number" id="cop_resa" value="10" step="0.1" /></div>
+            <div class="field"><label>Potenza elettrica assorbita (kW)</label><input type="number" id="cop_pel" value="2.5" step="0.1" /></div>
+            <div class="result" id="copResult">—</div>
+            <div class="hint">COP per riscaldamento, EER per raffrescamento: stessa formula, resa/assorbimento.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULO: INFO -->
+      <section class="module" id="module-info">
+        <div class="card">
+          <h2>Formule usate</h2>
+          <p><strong>Curva climatica</strong> — interpolazione lineare tra i due punti di taratura
+            (T<sub>est,progetto</sub>, T<sub>mand,max</sub>) e (T<sub>est,fine</sub>, T<sub>mand,min</sub>):</p>
+          <pre>Tmand = Tmand_max + (Test - Test_min) * (Tmand_min - Tmand_max) / (Test_max - Test_min)</pre>
+          <p>La mandata viene poi limitata (clamp) all'intervallo tra i due valori di taratura.</p>
+          <p><strong>COP / EER</strong> = Resa / Potenza assorbita</p>
+          <p class="hint">Verifica queste formule con quelle dei tuoi corsi prima dell'uso reale.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
