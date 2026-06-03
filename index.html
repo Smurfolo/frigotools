@@ -23,6 +23,7 @@
       </div>
       <nav class="nav" id="nav">
         <button class="nav-item active" data-module="curva">Curva climatica</button>
+        <button class="nav-item" data-module="ph">Diagramma p-h</button>
         <button class="nav-item" data-module="conversioni">Conversioni unità</button>
         <button class="nav-item" data-module="cop">COP / EER</button>
         <button class="nav-item" data-module="info">Info &amp; formule</button>
@@ -75,6 +76,69 @@
         </div>
       </section>
 
+      <!-- MODULO: DIAGRAMMA p-h -->
+      <section class="module" id="module-ph">
+        <p class="lead">
+          Definisci il ciclo frigorifero tramite le pressioni assolute di evaporazione e
+          condensazione. Il tool traccia il ciclo sul diagramma log p-h e calcola, a partire
+          dal carico frigorifero, la portata e la potenza di compressione.
+        </p>
+        <div id="phStatus" class="result">Caricamento libreria termodinamica…</div>
+        <div class="grid">
+          <div class="card">
+            <h2>Parametri del ciclo</h2>
+            <div class="field">
+              <label>Refrigerante</label>
+              <select id="ph_fluid">
+                <option value="R32">R32</option>
+                <option value="R410A">R410A</option>
+                <option value="R290">R290 (propano)</option>
+                <option value="R454C" disabled>R454C — non ancora supportato</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Pressione di evaporazione (bar assoluti)</label>
+              <input type="number" id="ph_pe" value="5" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Pressione di condensazione (bar assoluti)</label>
+              <input type="number" id="ph_pc" value="20" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Surriscaldamento all'aspirazione (K)</label>
+              <input type="number" id="ph_sh" value="5" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Sottoraffreddamento al condensatore (K)</label>
+              <input type="number" id="ph_sc" value="3" step="0.5" />
+            </div>
+            <div class="field">
+              <label>Rendimento isentropico compressore (0–1)</label>
+              <input type="number" id="ph_eta" value="0.7" step="0.05" min="0.1" max="1" />
+            </div>
+            <div class="field">
+              <label>Carico frigorifero (kW)</label>
+              <input type="number" id="ph_load" value="10" step="0.1" />
+            </div>
+          </div>
+          <div class="card chart-card">
+            <h2>Diagramma log p-h</h2>
+            <canvas id="phChart"></canvas>
+            <div class="hint">Cupola di saturazione + ciclo (1→2→3→4). Asse pressione logaritmico.</div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:20px">
+          <div class="card">
+            <h2>Risultati</h2>
+            <div class="result" id="phResult">—</div>
+          </div>
+          <div class="card">
+            <h2>Punti del ciclo</h2>
+            <div class="result" id="phPoints" style="font-size:13px">—</div>
+          </div>
+        </div>
+      </section>
+
       <!-- MODULO: CONVERSIONI -->
       <section class="module" id="module-conversioni">
         <p class="lead">Conversioni rapide tra le unità più usate sul campo.</p>
@@ -123,6 +187,14 @@
           <pre>Tmand = Tmand_max + (Test - Test_min) * (Tmand_min - Tmand_max) / (Test_max - Test_min)</pre>
           <p>La mandata viene poi limitata (clamp) all'intervallo tra i due valori di taratura.</p>
           <p><strong>COP / EER</strong> = Resa / Potenza assorbita</p>
+          <p><strong>Ciclo frigorifero (diagramma p-h)</strong> — i 4 punti:</p>
+          <pre>1  aspirazione  = p_evap, T_sat,evap + surriscaldamento
+2  mandata      = p_cond, da compressione (rendimento isentropico)
+3  liquido      = p_cond, T_sat,cond - sottoraffreddamento
+4  post-valvola = p_evap, h costante (h4 = h3)</pre>
+          <p>Resa frigorifera specifica q = h1 − h4 · Lavoro compressore w = h2 − h1</p>
+          <pre>portata = carico / q        Pot.compressore = portata · w
+EER = q / w                 COP = (h2 − h3) / w</pre>
           <p class="hint">Verifica queste formule con quelle dei tuoi corsi prima dell'uso reale.</p>
         </div>
       </section>

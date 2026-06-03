@@ -127,6 +127,17 @@ body {
   transition: border-color .15s;
 }
 .field input:focus { outline: none; border-color: var(--accent); }
+.field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 10px 12px;
+  border-radius: 9px;
+}
+.field select:focus { outline: none; border-color: var(--accent); }
 
 .result {
   margin-top: 18px;
