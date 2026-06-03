@@ -176,29 +176,49 @@ function loadCoolProp() {
   if (Module || coolpropLoading) return;
   coolpropLoading = true;
   const status = document.getElementById('phStatus');
-  const script = document.createElement('script');
-  script.src = 'coolprop.js';
-  script.onload = () => {
-    // coolprop.js espone una factory globale: la inizializziamo
-    if (typeof createModule === 'function') {
-      createModule().then(m => { Module = m; onCoolPropReady(); });
-    } else if (typeof Module === 'object' && Module.PropsSI) {
-      onCoolPropReady();
-    } else {
-      // fallback: la build classica popola window.Module dopo onRuntimeInitialized
-      const t = setInterval(() => {
-        if (window.Module && window.Module.PropsSI) {
-          Module = window.Module; clearInterval(t); onCoolPropReady();
-        }
-      }, 200);
-    }
-  };
-  script.onerror = () => {
-    status.innerHTML = '⚠️ Impossibile caricare <code>coolprop.js</code>. ' +
-      'Verifica che i file <code>coolprop.js</code> e <code>coolprop.wasm</code> ' +
-      'siano nella radice del sito e che la pagina sia aperta online (non in locale).';
-  };
-  document.head.appendChild(script);
+
+  // La build 7.2.0 è un modulo ES: la importiamo dinamicamente.
+  import('./coolprop.js')
+    .then(mod => {
+      // Le build Emscripten possono esporre la factory in modi diversi:
+      // 1) export default => mod.default
+      // 2) export nominato createModule / Module
+      // 3) il modulo è già l'istanza
+      const factory =
+        (typeof mod.default === 'function' && mod.default) ||
+        (typeof mod.createModule === 'function' && mod.createModule) ||
+        (typeof mod.Module === 'function' && mod.Module) ||
+        (typeof mod === 'function' && mod) ||
+        null;
+
+      if (factory) {
+        return factory().then(instance => { Module = instance; });
+      }
+      // Già un'istanza con PropsSI pronto?
+      const inst = mod.default || mod.Module || mod;
+      if (inst && typeof inst.PropsSI === 'function') { Module = inst; return; }
+      // Istanza che si inizializza in modo asincrono
+      if (inst && inst.ready && typeof inst.ready.then === 'function') {
+        return inst.ready.then(() => { Module = inst; });
+      }
+      throw new Error('export di coolprop.js non riconosciuto: ' +
+        Object.keys(mod).join(', '));
+    })
+    .then(() => {
+      if (Module && typeof Module.PropsSI === 'function') {
+        onCoolPropReady();
+      } else {
+        throw new Error('PropsSI non disponibile sull\'istanza caricata');
+      }
+    })
+    .catch(err => {
+      coolpropLoading = false;
+      status.innerHTML = '⚠️ Caricamento CoolProp non riuscito: <code>' +
+        (err && err.message ? err.message : err) + '</code><br>' +
+        'Verifica che <code>coolprop.js</code> e <code>coolprop.wasm</code> siano ' +
+        'nella radice del sito e che la pagina sia online (il WASM non parte in locale).';
+      console.error('CoolProp load error:', err);
+    });
 }
 
 function onCoolPropReady() {
